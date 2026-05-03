@@ -1,0 +1,19 @@
+{
+  "name": "simple-dca",
+  "version": "1.0.0",
+  "description": "Simple Investment DCA Tool",
+  "main": "app.js",
+  "scripts": {
+    "sync": "npx cap copy android",
+    "open-android": "npx cap open android",
+    "web": "npx serve Web"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  }
+}
