@@ -1,0 +1,48 @@
+# === 系统文件 ===
+.DS_Store
+Thumbs.db
+
+# === IDE / 编辑器 ===
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# === Node.js ===
+node_modules/
+npm-debug.log*
+
+# === Python 调试脚本 ===
+*.py
+__pycache__/
+
+# === 临时图标处理文件 ===
+*_修复.png
+*_缩小.png
+icon_*_preview.png
+logo_final.png
+
+# === Android 构建产物 ===
+Android/.gradle/
+Android/build/
+Android/app/build/
+Android/local.properties
+Android/captures/
+Android/.externalNativeBuild/
+Android/.cxx/
+*.apk
+*.aab
+*.aar
+*.ap_
+*.dex
+*.class
+*.hprof
+*.log
+
+# === Capacitor 自动生成（由 npm run sync 生成，无需版本控制） ===
+Android/capacitor-cordova-android-plugins/
+Android/app/src/main/assets/public/
+Android/app/src/main/assets/capacitor.config.json
+Android/app/src/main/assets/capacitor.plugins.json
+Android/app/src/main/res/xml/config.xml
