@@ -1,5 +1,11 @@
 {
   "appId": "com.simpledca.app",
   "appName": "简单定投",
-  "webDir": "Web"
+  "webDir": "Web",
+  "plugins": {
+    "StatusBar": {
+      "backgroundColor": "#18201f",
+      "style": "DARK"
+    }
+  }
 }
