@@ -110,6 +110,8 @@ const els = {
   allocationChart: document.querySelector("#allocationChart"),
   allocationRatio: document.querySelector("#allocationRatio"),
   rebalanceAdvice: document.querySelector("#rebalanceAdvice"),
+  historySection: document.querySelector("#historySection"),
+  historyTimeline: document.querySelector("#historyTimeline"),
 };
 
 function loadState() {
@@ -612,8 +614,10 @@ function renderRebalanceAdvice(core, satellite) {
 function renderValuationStatus() {
   const sourceCount = state.valuations.filter((item) => item.source !== "内置兜底").length;
   if (state.valuationUpdatedAt && sourceCount > 0) {
+    const date = new Date(state.valuationUpdatedAt);
+    const dateStr = `${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
     els.valuationNotice.className = "notice-box success";
-    els.valuationNotice.textContent = `估值数据已更新，已自动匹配 ${sourceCount} 条指数 PE 百分位；未覆盖的指数可选择“自定义 / 手动输入”。`;
+    els.valuationNotice.textContent = `估值数据已于 ${dateStr} 更新，已自动匹配 ${sourceCount} 条指数 PE 百分位；未覆盖的指数可选择“自定义 / 手动输入”。`;
   } else {
     els.valuationNotice.className = "notice-box warning";
     els.valuationNotice.textContent = "暂未获取到最新公开估值数据，当前使用内置估值表；如 PE 百分位不准确，请手动修正。";
@@ -761,6 +765,7 @@ function bindEvents() {
     if (!Array.isArray(state.actionHistory)) state.actionHistory = [];
     state.actionHistory.push({
       fundId,
+      fundName: fund.name || "未命名基金",
       type,
       amount: Math.round(amount),
       previousValue: fund.value,
@@ -893,9 +898,38 @@ function render() {
   renderInputs();
   renderOverview();
   renderActions();
+  renderHistory();
   renderAllocation();
   renderFunds();
   renderValuationStatus();
+}
+
+function renderHistory() {
+  if (!Array.isArray(state.actionHistory) || state.actionHistory.length === 0) {
+    els.historySection.style.display = "none";
+    return;
+  }
+
+  els.historySection.style.display = "";
+  
+  // 只显示最近 10 条记录
+  const sortedHistory = [...state.actionHistory].reverse().slice(0, 10);
+  
+  els.historyTimeline.innerHTML = sortedHistory.map(item => {
+    const date = new Date(item.timestamp);
+    const timeStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    const typeLabel = item.type === "buy" ? "买入" : "卖出";
+    
+    return `
+      <div class="timeline-item ${item.type}">
+        <div class="timeline-content">
+          <span class="timeline-time">${timeStr}</span>
+          <div class="timeline-title">${typeLabel} ${item.fundName}</div>
+          <div class="timeline-desc">金额：<strong>${money(item.amount)}</strong></div>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function shouldAutoRefreshValuations() {
