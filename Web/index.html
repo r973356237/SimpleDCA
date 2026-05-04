@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>简单定投 - 极简投资工具</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="apple-touch-icon" href="icon.png" />
@@ -52,7 +53,8 @@
                 style="font-size: 13px; color: var(--green);">--</strong></p>
           </div>
           <div class="summary-row slim" style="margin-top: 14px;">
-            <span>卫星仓目标金额 <em id="satelliteTargetNote" style="font-style: normal; color: var(--muted);">（30%）</em></span>
+            <span>卫星仓目标金额 <em id="satelliteTargetNote"
+                style="font-style: normal; color: var(--muted);">（30%）</em></span>
             <strong id="satelliteTarget">--</strong>
             <p style="margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55;">已持仓 <strong
                 id="satelliteHolding" style="font-size: 13px; color: var(--gold);">--</strong></p>
@@ -76,10 +78,18 @@
             <label>
               年度再平衡月份
               <select id="rebalanceMonth">
-                <option value="0">1 月</option><option value="1">2 月</option><option value="2">3 月</option>
-                <option value="3">4 月</option><option value="4">5 月</option><option value="5">6 月</option>
-                <option value="6">7 月</option><option value="7">8 月</option><option value="8">9 月</option>
-                <option value="9">10 月</option><option value="10">11 月</option><option value="11">12 月</option>
+                <option value="0">1 月</option>
+                <option value="1">2 月</option>
+                <option value="2">3 月</option>
+                <option value="3">4 月</option>
+                <option value="4">5 月</option>
+                <option value="5">6 月</option>
+                <option value="6">7 月</option>
+                <option value="7">8 月</option>
+                <option value="8">9 月</option>
+                <option value="9">10 月</option>
+                <option value="10">11 月</option>
+                <option value="11">12 月</option>
               </select>
             </label>
           </div>
@@ -88,7 +98,7 @@
 
       <!-- [移动端视图] 4. 设置 -->
       <div class="tab-content" data-tab="settings">
-        <details class="panel rule-panel" open>
+        <details id="ruleSettingsPanel" class="panel rule-panel">
           <summary class="pc-only">
             <span>规则设置</span>
             <em>低频调整</em>
@@ -103,7 +113,8 @@
               <label>
                 <div class="label-row">
                   定投周期天数
-                  <span class="label-help"><i class="label-help-icon">?</i><span class="label-help-text">定投执行的间隔时间。</span></span>
+                  <span class="label-help"><i class="label-help-icon">?</i><span
+                      class="label-help-text">定投执行的间隔时间。</span></span>
                 </div>
                 <span class="input-suffix">
                   <input id="dcaCycleDays" type="number" min="1" max="365" step="1" />
@@ -113,7 +124,8 @@
               <label>
                 <div class="label-row">
                   建议定投步数
-                  <span class="label-help"><i class="label-help-icon">?</i><span class="label-help-text">计划分多少次将目标资金投入。</span></span>
+                  <span class="label-help"><i class="label-help-icon">?</i><span
+                      class="label-help-text">计划分多少次将目标资金投入。</span></span>
                 </div>
                 <span class="input-suffix">
                   <input id="dcaBatches" type="number" min="1" max="100" step="1" />
@@ -125,28 +137,40 @@
             <h4 style="margin-top: 24px; margin-bottom: 8px;">核心仓规则</h4>
             <div class="rule-group" style="display: grid; gap: 16px;">
               <label>
-                <div class="label-row">核心仓比例<span class="label-help"><i class="label-help-icon">?</i><span class="label-help-text">稳健型资产在总计划中的权重。</span></span></div>
-                <span class="input-suffix"><input id="coreRatio" type="number" min="1" max="99" step="1" /><em>%</em></span>
+                <div class="label-row">核心仓比例<span class="label-help"><i class="label-help-icon">?</i><span
+                      class="label-help-text">稳健型资产在总计划中的权重。</span></span></div>
+                <span class="input-suffix"><input id="coreRatio" type="number" min="1" max="99"
+                    step="1" /><em>%</em></span>
               </label>
               <label>
-                <div class="label-row">核心仓拉满线<span class="label-help"><i class="label-help-icon">?</i><span class="label-help-text">极度低估，触发最大资金买入。</span></span></div>
-                <span class="input-suffix"><input id="coreFullBelow" type="number" min="0" max="100" step="1" /><em>%</em></span>
+                <div class="label-row">核心仓拉满线<span class="label-help"><i class="label-help-icon">?</i><span
+                      class="label-help-text">极度低估，触发最大资金买入。</span></span></div>
+                <span class="input-suffix"><input id="coreFullBelow" type="number" min="0" max="100"
+                    step="1" /><em>%</em></span>
               </label>
               <label>
-                <div class="label-row">核心仓半仓下限<span class="label-help"><i class="label-help-icon">?</i><span class="label-help-text">估值超过此值，投入减半。</span></span></div>
-                <span class="input-suffix"><input id="coreHalfLow" type="number" min="0" max="100" step="1" /><em>%</em></span>
+                <div class="label-row">核心仓半仓下限<span class="label-help"><i class="label-help-icon">?</i><span
+                      class="label-help-text">估值超过此值，投入减半。</span></span></div>
+                <span class="input-suffix"><input id="coreHalfLow" type="number" min="0" max="100"
+                    step="1" /><em>%</em></span>
               </label>
               <label>
-                <div class="label-row">核心仓半仓上限<span class="label-help"><i class="label-help-icon">?</i><span class="label-help-text">不再便宜，停止买入仅持有。</span></span></div>
-                <span class="input-suffix"><input id="coreHalfHigh" type="number" min="0" max="100" step="1" /><em>%</em></span>
+                <div class="label-row">核心仓半仓上限<span class="label-help"><i class="label-help-icon">?</i><span
+                      class="label-help-text">不再便宜，停止买入仅持有。</span></span></div>
+                <span class="input-suffix"><input id="coreHalfHigh" type="number" min="0" max="100"
+                    step="1" /><em>%</em></span>
               </label>
               <label>
-                <div class="label-row">核心仓止盈线<span class="label-help"><i class="label-help-icon">?</i><span class="label-help-text">进入高估区，建议卖出。</span></span></div>
-                <span class="input-suffix"><input id="coreSellAbove" type="number" min="0" max="100" step="1" /><em>%</em></span>
+                <div class="label-row">核心仓止盈线<span class="label-help"><i class="label-help-icon">?</i><span
+                      class="label-help-text">进入高估区，建议卖出。</span></span></div>
+                <span class="input-suffix"><input id="coreSellAbove" type="number" min="0" max="100"
+                    step="1" /><em>%</em></span>
               </label>
               <label>
-                <div class="label-row">核心仓止盈比例<span class="label-help"><i class="label-help-icon">?</i><span class="label-help-text">卖出当前持仓的百分比。</span></span></div>
-                <span class="input-suffix"><input id="coreSellPercent" type="number" min="1" max="100" step="1" /><em>%</em></span>
+                <div class="label-row">核心仓止盈比例<span class="label-help"><i class="label-help-icon">?</i><span
+                      class="label-help-text">卖出当前持仓的百分比。</span></span></div>
+                <span class="input-suffix"><input id="coreSellPercent" type="number" min="1" max="100"
+                    step="1" /><em>%</em></span>
               </label>
             </div>
 
@@ -154,26 +178,34 @@
             <div class="rule-group" style="display: grid; gap: 16px;">
               <div class="summary-row slim"><span>卫星仓比例</span><strong id="satelliteRatioSummary">--</strong></div>
               <label>
-                <div class="label-row">卫星仓买入线<span class="label-help"><i class="label-help-icon">?</i><span class="label-help-text">仅在极度低估时建仓。</span></span></div>
-                <span class="input-suffix"><input id="satelliteBuyBelow" type="number" min="0" max="100" step="1" /><em>%</em></span>
+                <div class="label-row">卫星仓买入线<span class="label-help"><i class="label-help-icon">?</i><span
+                      class="label-help-text">仅在极度低估时建仓。</span></span></div>
+                <span class="input-suffix"><input id="satelliteBuyBelow" type="number" min="0" max="100"
+                    step="1" /><em>%</em></span>
               </label>
               <label>
-                <div class="label-row">卫星仓卖一半线<span class="label-help"><i class="label-help-icon">?</i><span class="label-help-text">阶段性收益后卖出一半。</span></span></div>
-                <span class="input-suffix"><input id="satelliteSellHalfAbove" type="number" min="0" max="100" step="1" /><em>%</em></span>
+                <div class="label-row">卫星仓卖一半线<span class="label-help"><i class="label-help-icon">?</i><span
+                      class="label-help-text">阶段性收益后卖出一半。</span></span></div>
+                <span class="input-suffix"><input id="satelliteSellHalfAbove" type="number" min="0" max="100"
+                    step="1" /><em>%</em></span>
               </label>
               <label>
-                <div class="label-row">卫星仓清仓线<span class="label-help"><i class="label-help-icon">?</i><span class="label-help-text">过热区全部清仓。</span></span></div>
-                <span class="input-suffix"><input id="satelliteClearAbove" type="number" min="0" max="100" step="1" /><em>%</em></span>
+                <div class="label-row">卫星仓清仓线<span class="label-help"><i class="label-help-icon">?</i><span
+                      class="label-help-text">过热区全部清仓。</span></span></div>
+                <span class="input-suffix"><input id="satelliteClearAbove" type="number" min="0" max="100"
+                    step="1" /><em>%</em></span>
               </label>
             </div>
           </div>
-          <button id="resetRulesButton" class="ghost-button full-button" type="button" style="margin-top:16px;">恢复默认规则</button>
+          <button id="resetRulesButton" class="ghost-button full-button" type="button"
+            style="margin-top:16px;">恢复默认规则</button>
         </details>
 
-        <div class="panel data-management" style="margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border-color);">
+        <div class="panel data-management"
+          style="margin-top: auto; padding-top: 24px; border-top: 1px solid var(--border-color);">
           <div class="panel-header mobile-only">
-             <p class="eyebrow">本地文件</p>
-             <h2>数据管理</h2>
+            <p class="eyebrow">本地文件</p>
+            <h2>数据管理</h2>
           </div>
           <p class="eyebrow pc-only" style="margin-bottom: 8px; padding: 0 16px;">数据管理</p>
           <div style="padding: 0 16px; display: grid; gap: 12px;">
@@ -204,7 +236,8 @@
                   <p class="eyebrow">操作建议</p>
                   <h3>下一步动作</h3>
                 </div>
-                <button id="undoButton" class="ghost-button" type="button" onclick="undoAction()" style="display: none;">撤回上一步</button>
+                <button id="undoButton" class="ghost-button" type="button" onclick="undoAction()"
+                  style="display: none;">撤回上一步</button>
               </div>
               <div id="actionList" class="action-list"></div>
             </section>
@@ -235,7 +268,7 @@
                 </div>
               </div>
               <p class="section-note">
-                用户只需要填写持仓金额；PE 百分位会优先从免费公开数据源自动匹配，匹配不到时再手动填。
+                用户只需要填写持仓金额；PE 百分位会优先从免费公开数据源自动匹配。
               </p>
               <div id="valuationNotice" class="notice-box"></div>
               <div id="fundList" class="fund-list"></div>
@@ -249,19 +282,37 @@
   <!-- 移动端原生底部导航 -->
   <nav class="mobile-nav">
     <button class="nav-item active" onclick="switchTab('overview')">
-      <i class="nav-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg></i>
+      <i class="nav-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+          <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+        </svg></i>
       <span>概览</span>
     </button>
     <button class="nav-item" onclick="switchTab('actions')">
-      <i class="nav-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></i>
+      <i class="nav-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg></i>
       <span>执行</span>
     </button>
     <button class="nav-item" onclick="switchTab('funds')">
-      <i class="nav-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg></i>
+      <i class="nav-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="9" y1="21" x2="9" y2="9"></line>
+        </svg></i>
       <span>清单</span>
     </button>
     <button class="nav-item" onclick="switchTab('settings')">
-      <i class="nav-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></i>
+      <i class="nav-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+          </path>
+        </svg></i>
       <span>规则</span>
     </button>
   </nav>
@@ -281,8 +332,8 @@
         <label>
           仓位类型
           <select data-field="bucket">
-            <option value="core">核心底仓</option>
-            <option value="satellite">卫星弹性仓</option>
+            <option value="core">核心仓</option>
+            <option value="satellite">卫星仓</option>
           </select>
         </label>
       </div>
@@ -303,11 +354,13 @@
       </div>
       <div class="fund-result" data-role="fundResult"></div>
       <div class="fund-card-footer" style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line);">
-        <button class="ghost-button full-button" style="color: var(--red); background: var(--red-soft); border: none;" data-action="remove" type="button">删除该基金</button>
+        <button class="ghost-button full-button" style="color: var(--red); background: var(--red-soft); border: none;"
+          data-action="remove" type="button">删除该基金</button>
       </div>
     </article>
   </template>
 
   <script src="./app.js"></script>
 </body>
+
 </html>

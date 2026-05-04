@@ -112,6 +112,7 @@ const els = {
   rebalanceAdvice: document.querySelector("#rebalanceAdvice"),
   historySection: document.querySelector("#historySection"),
   historyTimeline: document.querySelector("#historyTimeline"),
+  ruleSettingsPanel: document.querySelector("#ruleSettingsPanel"),
 };
 
 function loadState() {
@@ -208,7 +209,7 @@ function getPortfolioValue() {
 }
 
 function bucketName(bucket) {
-  return bucket === "core" ? "核心底仓" : "卫星弹性仓";
+  return bucket === "core" ? "核心仓" : "卫星仓";
 }
 
 function getBucketValue(bucket) {
@@ -966,3 +967,9 @@ render();
 if (shouldAutoRefreshValuations()) {
   refreshValuations();
 }
+
+// 响应式：在手机端默认展开规则设置
+if (window.innerWidth <= 768 && els.ruleSettingsPanel) {
+  els.ruleSettingsPanel.open = true;
+}
+
