@@ -1,4 +1,32 @@
 /**
+ * 检测是否运行在 Capacitor 安卓原生环境中
+ */
+function isCapacitorNative() {
+  return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+}
+
+/**
+ * 调用安卓原生日历插件添加日程提醒
+ */
+async function addCalendarEvent(options) {
+  if (!isCapacitorNative()) {
+    alert('日历提醒功能仅在安卓 App 中可用。');
+    return;
+  }
+  try {
+    const CalendarPlugin = window.Capacitor.Plugins.CalendarPlugin;
+    if (!CalendarPlugin) {
+      alert('日历插件未加载，请更新 App 后重试。');
+      return;
+    }
+    await CalendarPlugin.addEvent(options);
+  } catch (e) {
+    console.error('添加日历事件失败:', e);
+    alert('添加日历事件失败: ' + (e.message || '未知错误'));
+  }
+}
+
+/**
  * 移动端 Tab 切换逻辑
  */
 function switchTab(tabId) {
@@ -327,11 +355,16 @@ function buyAdvice(fund, amount, cashLimit, detail) {
     if (daysSinceLastAction < state.rules.dcaCycleDays) {
       const daysLeft = Math.ceil(state.rules.dcaCycleDays - daysSinceLastAction);
       const nextDate = new Date(fund.lastActionDate + state.rules.dcaCycleDays * 24 * 3600 * 1000);
-      return holdAdvice(
-        fund,
-        `目前估值处于买入区间，但距离下次定投日（${nextDate.toLocaleDateString()}）还有 <strong>${daysLeft}</strong> 天，请耐心等待。`,
-        ["等待定投日", bucketName(fund.bucket)],
-      );
+      return {
+        type: "hold",
+        fundId: fund.id,
+        title: `持有 ${fund.name}`,
+        detail: `目前估值处于买入区间，但距离下次定投日（${nextDate.toLocaleDateString()}）还有 <strong>${daysLeft}</strong> 天，请耐心等待。`,
+        amount: 0,
+        tags: ["等待定投日", bucketName(fund.bucket)],
+        calendarDate: nextDate.getTime(),
+        calendarAction: "buy",
+      };
     }
   }
 
@@ -461,23 +494,58 @@ function renderActions() {
     return;
   }
 
+  // 是否在安卓原生环境中（决定是否显示日历按钮）
+  const showCalendar = isCapacitorNative();
+
   els.actionList.innerHTML = sorted
     .map(
-      (advice) => `
-        <article class="action-item ${advice.type}">
-          <div class="action-item-header">
-            <strong>${advice.title}</strong>
-            <div class="tag-row">
-              ${advice.tags.map((tag) => `<span class="tag ${advice.type}">${tag}</span>`).join("")}
-            </div>
-          </div>
-          <p>${advice.detail}</p>
-          ${advice.type === "buy" || advice.type === "sell"
-          ? `<button class="ghost-button" style="margin-top: 12px; width: fit-content; padding: 6px 12px; font-size: 13px;" onclick="executeAction('${advice.fundId}', '${advice.type}', ${advice.amount})">确认已执行该操作</button>`
-          : ""
+      (advice) => {
+        let actionButtons = '';
+
+        if (advice.type === "buy" || advice.type === "sell") {
+          const actionLabel = advice.type === 'buy' ? '买入' : '卖出';
+          actionButtons += `<div class="action-buttons-row">`;
+          actionButtons += `<button class="ghost-button action-btn" onclick="executeAction('${advice.fundId}', '${advice.type}', ${advice.amount})">确认已执行</button>`;
+          if (showCalendar) {
+            const fund = state.funds.find(f => f.id === advice.fundId);
+            const fundName = fund ? fund.name : '基金';
+            actionButtons += `<button class="ghost-button action-btn calendar-btn" data-calendar="${encodeURIComponent(JSON.stringify({
+              title: actionLabel + ' ' + fundName,
+              description: '操作建议：' + actionLabel + '约 ' + money(advice.amount) + '\\n来自"简单定投"App',
+              beginTime: Date.now(),
+              allDay: true,
+            }))}">📅 添加日历提醒</button>`;
+          }
+          actionButtons += `</div>`;
         }
-        </article>
-      `,
+
+        // 等待定投日的持有建议增加日历提醒按钮
+        if (advice.calendarDate && showCalendar) {
+          const fund = state.funds.find(f => f.id === advice.fundId);
+          const fundName = fund ? fund.name : '基金';
+          actionButtons += `<div class="action-buttons-row">`;
+          actionButtons += `<button class="ghost-button action-btn calendar-btn" data-calendar="${encodeURIComponent(JSON.stringify({
+            title: '定投日：买入 ' + fundName,
+            description: '到达定投周期，请检查 ' + fundName + ' 的估值情况并执行买入操作。\\n来自"简单定投"App',
+            beginTime: advice.calendarDate,
+            allDay: true,
+          }))}">📅 定投日添加到日历</button>`;
+          actionButtons += `</div>`;
+        }
+
+        return `
+          <article class="action-item ${advice.type}">
+            <div class="action-item-header">
+              <strong>${advice.title}</strong>
+              <div class="tag-row">
+                ${advice.tags.map((tag) => `<span class="tag ${advice.type}">${tag}</span>`).join("")}
+              </div>
+            </div>
+            <p>${advice.detail}</p>
+            ${actionButtons}
+          </article>
+        `;
+      },
     )
     .join("");
 }
@@ -777,6 +845,19 @@ function mergeValuations(fresh) {
 }
 
 function bindEvents() {
+  // 事件委托：处理日历按钮点击（使用 data-calendar 属性传递数据，避免转义问题）
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-calendar]');
+    if (!btn) return;
+    try {
+      const data = JSON.parse(decodeURIComponent(btn.dataset.calendar));
+      addCalendarEvent(data);
+    } catch (err) {
+      console.error('日历数据解析失败:', err);
+      alert('添加日历提醒失败，请重试。');
+    }
+  });
+
   window.executeAction = function (fundId, type, amount) {
     const fund = state.funds.find((f) => f.id === fundId);
     if (!fund) return;

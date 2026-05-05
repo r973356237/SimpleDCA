@@ -990,3 +990,50 @@ select:focus {
 }
 
 @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- 操作按钮行与日历提醒按钮 --- */
+.action-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.action-btn {
+  width: fit-content;
+  padding: 6px 12px;
+  font-size: 13px;
+  min-height: 36px;
+  transition: all 0.2s ease;
+}
+
+.calendar-btn {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.calendar-btn:hover {
+  background: var(--blue);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(56, 111, 164, 0.25);
+}
+
+.calendar-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .action-buttons-row {
+    flex-direction: column;
+  }
+
+  .action-btn {
+    width: 100%;
+    text-align: center;
+    height: 44px;
+    font-size: 14px;
+  }
+}
