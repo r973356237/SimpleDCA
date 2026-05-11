@@ -194,6 +194,20 @@ function saveState() {
 
 function money(value) {
   const numeric = Number.isFinite(value) ? value : 0;
+  // 按需显示小数：整数不显示小数点，1位小数显示1位，最多2位
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(numeric);
+}
+
+/**
+ * 操作建议中的金额显示，四舍五入到整数，避免过多小数干扰决策
+ */
+function moneyRound(value) {
+  const numeric = Number.isFinite(value) ? Math.round(value) : 0;
   return new Intl.NumberFormat("zh-CN", {
     style: "currency",
     currency: "CNY",
@@ -349,22 +363,96 @@ function buildFundAdvice(fund, cashLimit) {
   return holdAdvice(fund, `核心仓 PE 百分位高于 <strong>${rules.coreHalfHigh}%</strong> 且未到止盈线，暂停新建仓，只持有观望。`);
 }
 
+/**
+ * 中国 A 股休市日历表（2025-2027年）
+ * 格式："YYYY-MM-DD"，包含所有法定节假日及调休日
+ * 每年初根据国务院公告更新
+ */
+const CN_HOLIDAYS = new Set([
+  // 2025年
+  "2025-01-01",                                                      // 元旦
+  "2025-01-28","2025-01-29","2025-01-30","2025-01-31",                // 春节
+  "2025-02-01","2025-02-02","2025-02-03","2025-02-04",                // 春节
+  "2025-04-04",                                                      // 清明
+  "2025-05-01","2025-05-02","2025-05-05",                             // 劳动节
+  "2025-05-31","2025-06-01","2025-06-02",                             // 端午节
+  "2025-10-01","2025-10-02","2025-10-03",                             // 国庆节
+  "2025-10-06","2025-10-07","2025-10-08",                             // 国庆节
+  // 2026年（预估，待官方公告后更新）
+  "2026-01-01","2026-01-02",                                          // 元旦
+  "2026-02-17","2026-02-18","2026-02-19","2026-02-20",                // 春节
+  "2026-02-23","2026-02-24","2026-02-25",                             // 春节
+  "2026-04-06",                                                      // 清明
+  "2026-05-01",                                                      // 劳动节
+  "2026-06-19",                                                      // 端午节
+  "2026-10-01","2026-10-02",                                          // 国庆节
+  "2026-10-05","2026-10-06","2026-10-07",                             // 国庆节
+  // 2027年（预估）
+  "2027-01-01",                                                      // 元旦
+  "2027-02-08","2027-02-09","2027-02-10","2027-02-11",                // 春节
+  "2027-02-12",                                                      // 春节
+  "2027-04-05",                                                      // 清明
+  "2027-05-03",                                                      // 劳动节
+  "2027-06-09",                                                      // 端午节
+  "2027-09-27",                                                      // 中秋节
+  "2027-10-01","2027-10-04","2027-10-05","2027-10-06","2027-10-07",  // 国庆节
+]);
+
+/**
+ * 判断给定日期是否为 A 股交易日
+ * 规则：周一到周五 且 不在休市日历表中
+ */
+function isTradingDay(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  // 周六周日非交易日
+  if (day === 0 || day === 6) return false;
+  // 检查节假日表
+  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return !CN_HOLIDAYS.has(key);
+}
+
+/**
+ * 将给定日期调整到最近的交易日（如果当天是交易日则不变，否则往前找）
+ */
+function adjustToTradingDay(date) {
+  const d = new Date(date);
+  // 往前找最多 10 天（覆盖最长节假日）
+  for (let i = 0; i < 10; i++) {
+    if (isTradingDay(d)) return d;
+    d.setDate(d.getDate() - 1);
+  }
+  // 如果 10 天内找不到交易日（极端情况），返回原日期
+  return new Date(date);
+}
+
 function buyAdvice(fund, amount, cashLimit, detail) {
   if (fund.lastActionDate && state.rules.dcaCycleDays) {
     const daysSinceLastAction = (Date.now() - fund.lastActionDate) / (1000 * 3600 * 24);
     if (daysSinceLastAction < state.rules.dcaCycleDays) {
-      const daysLeft = Math.ceil(state.rules.dcaCycleDays - daysSinceLastAction);
-      const nextDate = new Date(fund.lastActionDate + state.rules.dcaCycleDays * 24 * 3600 * 1000);
-      return {
-        type: "hold",
-        fundId: fund.id,
-        title: `持有 ${fund.name}`,
-        detail: `目前估值处于买入区间，但距离下次定投日（${nextDate.toLocaleDateString()}）还有 <strong>${daysLeft}</strong> 天，请耐心等待。`,
-        amount: 0,
-        tags: ["等待定投日", bucketName(fund.bucket)],
-        calendarDate: nextDate.getTime(),
-        calendarAction: "buy",
-      };
+      // 计算原始定投日，然后调整到交易日
+      const rawNextDate = new Date(fund.lastActionDate + state.rules.dcaCycleDays * 24 * 3600 * 1000);
+      const nextDate = adjustToTradingDay(rawNextDate);
+      const daysLeft = Math.max(1, Math.ceil((nextDate.getTime() - Date.now()) / (1000 * 3600 * 24)));
+
+      // 如果调整后的交易日已经过去或就是今天，不再等待
+      if (nextDate.getTime() <= Date.now()) {
+        // 定投日已到，直接给出买入建议
+      } else {
+        const dateStr = `${nextDate.getMonth() + 1}月${nextDate.getDate()}日`;
+        const wasAdjusted = rawNextDate.getTime() !== nextDate.getTime();
+        const adjustNote = wasAdjusted ? `（原定 ${rawNextDate.getMonth() + 1}月${rawNextDate.getDate()}日为非交易日，已提前）` : '';
+        return {
+          type: "hold",
+          fundId: fund.id,
+          title: `持有 ${fund.name}`,
+          detail: `目前估值处于买入区间，但距离下次定投日（${dateStr}${adjustNote}）还有 <strong>${daysLeft}</strong> 天，请耐心等待。`,
+          amount: 0,
+          tags: ["等待定投日", bucketName(fund.bucket)],
+          calendarDate: nextDate.getTime(),
+          calendarAction: "buy",
+        };
+      }
     }
   }
 
@@ -384,7 +472,7 @@ function sellAdvice(fund, amount, detail) {
     type: "sell",
     fundId: fund.id,
     title: `卖出 ${fund.name}`,
-    detail: `${detail} 建议卖出约 <strong>${money(roundedAmount)}</strong>。`,
+    detail: `${detail} 建议卖出约 <strong>${moneyRound(roundedAmount)}</strong>。`,
     amount: roundedAmount,
     tags: ["卖出", bucketName(fund.bucket)],
   };
@@ -511,7 +599,7 @@ function renderActions() {
             const fundName = fund ? fund.name : '基金';
             actionButtons += `<button class="ghost-button action-btn calendar-btn" data-calendar="${encodeURIComponent(JSON.stringify({
               title: actionLabel + ' ' + fundName,
-              description: '操作建议：' + actionLabel + '约 ' + money(advice.amount) + '\\n来自"简单定投"App',
+              description: '操作建议：' + actionLabel + '约 ' + moneyRound(advice.amount) + '\\n来自"简单定投"App',
               beginTime: Date.now(),
               allDay: true,
             }))}">📅 添加日历提醒</button>`;
@@ -584,7 +672,7 @@ function buildActionAdvices() {
         ...advice,
         type: "hold",
         title: `暂不买入 ${state.funds.find((f) => f.id === advice.fundId).name}`,
-        detail: `${advice.detail} 理想买入 <strong>${money(advice.amount)}</strong>，但由于本期预算极其有限，分配金额不足 ¥1，建议先持有。`,
+        detail: `${advice.detail} 理想买入 <strong>${moneyRound(advice.amount)}</strong>，但由于本期预算极其有限，分配金额不足 ¥1，建议先持有。`,
         amount: 0,
         tags: ["待买入", advice.tags[1]],
       };
@@ -594,7 +682,7 @@ function buildActionAdvices() {
     if (scaledAmount === advice.amount) {
       return {
         ...advice,
-        detail: `${advice.detail} 本期建议买入 <strong>${money(scaledAmount)}</strong>。`,
+        detail: `${advice.detail} 本期建议买入 <strong>${moneyRound(scaledAmount)}</strong>。`,
       };
     }
 
@@ -602,7 +690,7 @@ function buildActionAdvices() {
     return {
       ...advice,
       amount: scaledAmount,
-      detail: `${advice.detail} 理想买入 <strong>${money(advice.amount)}</strong>，按可用资金及 <strong>${batches}</strong> 步定投节奏，本期分配买入 <strong>${money(scaledAmount)}</strong>。`,
+      detail: `${advice.detail} 理想买入 <strong>${moneyRound(advice.amount)}</strong>，按可用资金及 <strong>${batches}</strong> 步定投节奏，本期分配买入 <strong>${moneyRound(scaledAmount)}</strong>。`,
     };
   });
 }
@@ -691,9 +779,9 @@ function renderRebalanceAdvice(core, satellite) {
   }
 
   if (diff > 0) {
-    els.rebalanceAdvice.textContent = `${timing} 核心仓偏高，年度再平衡时可卖出核心约 ${money(absDiff)}，转入卫星仓。`;
+    els.rebalanceAdvice.textContent = `${timing} 核心仓偏高，年度再平衡时可卖出核心约 ${moneyRound(absDiff)}，转入卫星仓。`;
   } else {
-    els.rebalanceAdvice.textContent = `${timing} 卫星仓偏高，年度再平衡时可卖出卫星约 ${money(absDiff)}，转入核心仓。`;
+    els.rebalanceAdvice.textContent = `${timing} 卫星仓偏高，年度再平衡时可卖出卫星约 ${moneyRound(absDiff)}，转入核心仓。`;
   }
 }
 
@@ -858,6 +946,80 @@ function bindEvents() {
     }
   });
 
+  // 事件委托：处理时间轴的编辑、删除、保存、取消按钮（限定在时间轴区域内）
+  els.historyTimeline.addEventListener('click', function(e) {
+    const actionBtn = e.target.closest('[data-action]');
+    if (!actionBtn) return;
+
+    const action = actionBtn.dataset.action;
+    const indexStr = actionBtn.dataset.index;
+    if (indexStr === undefined) return;
+    const index = parseInt(indexStr, 10);
+
+    const timelineItem = actionBtn.closest('.timeline-item');
+    if (!timelineItem) return;
+
+    if (action === 'edit') {
+      // 切换到编辑模式
+      const display = timelineItem.querySelector('.timeline-display');
+      const form = timelineItem.querySelector('.timeline-edit-form');
+      if (display && form) {
+        display.style.display = 'none';
+        form.style.display = '';
+      }
+    }
+
+    if (action === 'cancel') {
+      // 取消编辑，恢复显示模式（直接重新渲染以还原数据）
+      renderHistory();
+    }
+
+    if (action === 'save') {
+      // 保存编辑
+      const record = state.actionHistory[index];
+      if (!record) return;
+
+      const form = timelineItem.querySelector('.timeline-edit-form');
+      const timestampInput = form.querySelector('[data-edit="timestamp"]');
+      const amountInput = form.querySelector('[data-edit="amount"]');
+
+      const newTimestamp = new Date(timestampInput.value).getTime();
+      const newAmount = Math.max(0, Math.round(toNumber(amountInput.value)));
+
+      if (!Number.isFinite(newTimestamp) || newTimestamp <= 0) {
+        alert('请输入有效的操作时间。');
+        return;
+      }
+
+      // 更新记录
+      record.timestamp = newTimestamp;
+      record.amount = newAmount;
+
+      // 从该位置开始重新计算所有后续操作的影响
+      recalculateFromHistory(index);
+
+      saveState();
+      render();
+    }
+
+    if (action === 'delete') {
+      const record = state.actionHistory[index];
+      if (!record) return;
+
+      const typeLabel = record.type === 'buy' ? '买入' : '卖出';
+      if (!confirm(`确定要删除"${typeLabel} ${record.fundName} ${moneyRound(record.amount)}"这条记录吗？\n删除后持仓金额会相应回退。`)) return;
+
+      // 移除该记录
+      state.actionHistory.splice(index, 1);
+
+      // 从删除位置开始重新计算
+      recalculateFromHistory(index);
+
+      saveState();
+      render();
+    }
+  });
+
   window.executeAction = function (fundId, type, amount) {
     const fund = state.funds.find((f) => f.id === fundId);
     if (!fund) return;
@@ -1014,24 +1176,142 @@ function renderHistory() {
 
   els.historySection.style.display = "";
 
-  // 只显示最近 10 条记录
-  const sortedHistory = [...state.actionHistory].reverse().slice(0, 10);
+  // 显示最近 20 条记录（编辑模式下可能需要看更多上下文）
+  const totalCount = state.actionHistory.length;
+  const displayHistory = [...state.actionHistory].reverse().slice(0, 20);
 
-  els.historyTimeline.innerHTML = sortedHistory.map(item => {
+  els.historyTimeline.innerHTML = displayHistory.map((item, displayIndex) => {
+    // 在 state.actionHistory 中的真实索引（从后往前映射）
+    const realIndex = totalCount - 1 - displayIndex;
     const date = new Date(item.timestamp);
     const timeStr = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
     const typeLabel = item.type === "buy" ? "买入" : "卖出";
 
+    // datetime-local 格式
+    const dtLocal = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}T${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
     return `
-      <div class="timeline-item ${item.type}">
+      <div class="timeline-item ${item.type}" data-history-index="${realIndex}">
         <div class="timeline-content">
-          <span class="timeline-time">${timeStr}</span>
-          <div class="timeline-title">${typeLabel} ${item.fundName}</div>
-          <div class="timeline-desc">金额：<strong>${money(item.amount)}</strong></div>
+          <!-- 普通显示模式 -->
+          <div class="timeline-display">
+            <div class="timeline-info">
+              <span class="timeline-time">${timeStr}</span>
+              <div class="timeline-title">${typeLabel} ${item.fundName}</div>
+              <div class="timeline-desc">金额：<strong>${moneyRound(item.amount)}</strong></div>
+            </div>
+            <div class="timeline-actions">
+              <button class="timeline-edit-btn" data-action="edit" data-index="${realIndex}" title="编辑">✏️</button>
+              <button class="timeline-delete-btn" data-action="delete" data-index="${realIndex}" title="删除">🗑️</button>
+            </div>
+          </div>
+          <!-- 编辑模式（默认隐藏） -->
+          <div class="timeline-edit-form" style="display: none;">
+            <label class="timeline-field">
+              <span>操作时间</span>
+              <input type="datetime-local" class="timeline-input" data-edit="timestamp" value="${dtLocal}" />
+            </label>
+            <label class="timeline-field">
+              <span>操作金额</span>
+              <input type="number" class="timeline-input" data-edit="amount" min="0" step="1" value="${item.amount}" />
+            </label>
+            <div class="timeline-edit-buttons">
+              <button class="ghost-button action-btn" data-action="save" data-index="${realIndex}">保存</button>
+              <button class="ghost-button action-btn" data-action="cancel" data-index="${realIndex}">取消</button>
+            </div>
+          </div>
         </div>
       </div>
     `;
   }).join("");
+}
+
+/**
+ * 从指定索引位置开始，重新回放所有操作历史，修正 previousValue 链和基金最终状态。
+ * 这是编辑/删除操作历史后联动更新的核心函数。
+ */
+function recalculateFromHistory(startIndex) {
+  const history = state.actionHistory;
+  if (!Array.isArray(history) || history.length === 0) return;
+
+  // 第一步：收集所有受影响基金的 ID
+  const affectedFundIds = new Set();
+  for (let i = startIndex; i < history.length; i++) {
+    affectedFundIds.add(history[i].fundId);
+  }
+
+  // 第二步：对每个受影响基金，找到 startIndex 之前的最后已知状态作为基准
+  for (const fundId of affectedFundIds) {
+    const fund = state.funds.find(f => f.id === fundId);
+    if (!fund) continue;
+
+    // 找到 startIndex 之前该基金的最后一条记录的 previousValue 作为基准
+    let baseValue = 0;
+    let baseLastActionDate = null;
+
+    // 在 startIndex 处，该基金的 previousValue 就是起始状态
+    // 需要从头开始找到该基金在 startIndex 之前的最终状态
+    for (let i = 0; i < startIndex; i++) {
+      if (history[i].fundId !== fundId) continue;
+      // 回放这条记录
+      if (history[i].type === "buy") {
+        baseValue = history[i].previousValue + history[i].amount;
+      } else {
+        baseValue = Math.max(0, history[i].previousValue - history[i].amount);
+      }
+      baseLastActionDate = history[i].timestamp;
+    }
+
+    // 如果 startIndex 之前没有该基金的记录，用第一条的 previousValue
+    if (startIndex === 0) {
+      // 找该基金在历史中的第一条
+      const firstRecord = history.find(h => h.fundId === fundId);
+      if (firstRecord) {
+        baseValue = firstRecord.previousValue;
+        baseLastActionDate = null;
+      }
+    } else {
+      // 检查 startIndex 之前是否有该基金的记录
+      let foundBefore = false;
+      for (let i = 0; i < startIndex; i++) {
+        if (history[i].fundId === fundId) { foundBefore = true; break; }
+      }
+      if (!foundBefore) {
+        // 没找到之前的记录，用 startIndex 处的 previousValue
+        const firstAfter = history.slice(startIndex).find(h => h.fundId === fundId);
+        if (firstAfter) {
+          baseValue = firstAfter.previousValue;
+          baseLastActionDate = null;
+        }
+      }
+    }
+
+    // 第三步：从 startIndex 开始，重新回放该基金的所有操作
+    let currentValue = baseValue;
+    let lastActionDate = baseLastActionDate;
+
+    for (let i = startIndex; i < history.length; i++) {
+      if (history[i].fundId !== fundId) continue;
+
+      // 更新该记录的 previousValue
+      history[i].previousValue = currentValue;
+
+      // 回放操作
+      if (history[i].type === "buy") {
+        currentValue += history[i].amount;
+      } else {
+        currentValue = Math.max(0, currentValue - history[i].amount);
+      }
+
+      // 更新 previousLastActionDate
+      history[i].previousLastActionDate = lastActionDate;
+      lastActionDate = history[i].timestamp;
+    }
+
+    // 第四步：更新基金当前值
+    fund.value = currentValue;
+    fund.lastActionDate = lastActionDate;
+  }
 }
 
 function shouldAutoRefreshValuations() {

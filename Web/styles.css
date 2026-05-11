@@ -884,6 +884,127 @@ select:focus {
   font-weight: 800;
 }
 
+/* 时间轴显示行：左文字 + 右操作按钮 */
+.timeline-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.timeline-info {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 时间轴操作按钮（右侧垂直排列） */
+.timeline-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+
+.timeline-content:hover .timeline-actions {
+  opacity: 1;
+}
+
+.timeline-edit-btn,
+.timeline-delete-btn {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--muted);
+  min-height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-edit-btn:hover {
+  background: var(--blue-soft);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.timeline-delete-btn:hover {
+  background: var(--red-soft);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* 时间轴编辑表单 */
+.timeline-edit-form {
+  display: grid;
+  gap: 12px;
+  animation: slideUp 0.2s ease;
+}
+
+.timeline-field {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.timeline-field > span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.timeline-input {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  padding: 6px 10px;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+}
+
+.timeline-input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(20, 124, 100, 0.14);
+}
+
+.timeline-edit-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.timeline-edit-buttons .action-btn {
+  flex: 1;
+  min-height: 34px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.timeline-edit-buttons .action-btn[data-action="save"] {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+
+.timeline-edit-buttons .action-btn[data-action="save"]:hover {
+  opacity: 0.9;
+}
+
+.timeline-edit-buttons .action-btn[data-action="cancel"]:hover {
+  background: #f0eee7;
+}
+
 .mobile-header {
   display: none;
   position: sticky;
